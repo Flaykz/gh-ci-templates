@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    uses: Flaykz/gh-ci-templates/.github/workflows/release.yml@main
+    with:
+      publish-docker: false
+      # docker-image: ghcr.io/flaykz/my-repo
+    secrets:
+      release-token: ${{ secrets.DEVELOP_SYNC_TOKEN }}

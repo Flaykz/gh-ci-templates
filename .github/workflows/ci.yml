@@ -1,0 +1,53 @@
+name: Reusable CI
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: Node.js version to use
+        type: string
+        default: "22"
+      lint-command:
+        description: Command to run for linting
+        type: string
+        default: "npm run lint"
+      typecheck-command:
+        description: Command to run for typechecking
+        type: string
+        default: "npm run typecheck"
+      build-command:
+        description: Command to run for building
+        type: string
+        default: "npm run build"
+      install-command:
+        description: Command to install dependencies
+        type: string
+        default: "npm ci"
+
+jobs:
+  checks:
+    name: Lint, typecheck, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: ${{ inputs.install-command }}
+
+      - name: Lint
+        run: ${{ inputs.lint-command }}
+
+      - name: Typecheck
+        run: ${{ inputs.typecheck-command }}
+
+      - name: Build
+        run: ${{ inputs.build-command }}

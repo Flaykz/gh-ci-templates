@@ -1,0 +1,26 @@
+name: Branch policy
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: branch-policy-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate-source-branch:
+    uses: Flaykz/gh-ci-templates/.github/workflows/branch-policy.yml@main
+    # with:
+    #   main-branch: main
+    #   develop-branch: develop

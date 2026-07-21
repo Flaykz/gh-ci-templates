@@ -1,0 +1,47 @@
+name: Reusable branch policy
+
+on:
+  workflow_call:
+    inputs:
+      main-branch:
+        description: Name of the stable/production branch
+        type: string
+        default: "main"
+      develop-branch:
+        description: Name of the integration branch
+        type: string
+        default: "develop"
+      work-branch-pattern:
+        description: Extended regex the head branch must match for PRs into develop-branch
+        type: string
+        default: "^(feature|fix|chore|docs|refactor|test|perf|ci|build|revert|dependabot)/.+$"
+
+jobs:
+  validate-source-branch:
+    name: Validate source branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Enforce branch flow
+        shell: bash
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+          MAIN_BRANCH: ${{ inputs.main-branch }}
+          DEVELOP_BRANCH: ${{ inputs.develop-branch }}
+          WORK_BRANCH_PATTERN: ${{ inputs.work-branch-pattern }}
+        run: |
+          if [[ "$BASE" == "$MAIN_BRANCH" && "$HEAD" != "$DEVELOP_BRANCH" ]]; then
+            echo "Pull requests to $MAIN_BRANCH must come from $DEVELOP_BRANCH. Current source branch: $HEAD"
+            exit 1
+          fi
+
+          if [[ "$BASE" == "$DEVELOP_BRANCH" && "$HEAD" == "$MAIN_BRANCH" ]]; then
+            exit 0
+          fi
+
+          if [[ "$BASE" == "$DEVELOP_BRANCH" && ! "$HEAD" =~ $WORK_BRANCH_PATTERN ]]; then
+            echo "Pull requests to $DEVELOP_BRANCH must come from a work branch matching: $WORK_BRANCH_PATTERN. Current source branch: $HEAD"
+            exit 1
+          fi
